@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>任务列表</title>
+  <link href="../static/main.css" rel="stylesheet">
+  
+    <script>
+      function show_events(event_status,delete_id,change_id){
+        var events_list=document.getElementById('events_list')
+        fetch('/submit',{
+          method: 'POST',
+          body: JSON.stringify({events:event_status,delete_id:delete_id,change_id:change_id}),
+          headers:{'Content-Type': 'application/json'}
+        }).then(function (res){
+          return res.json()
+        }).then(function (data){
+          if(data.status==-1){
+            location.href = '/login'
+          }else{
+            html_info=""
+            events=data.events
+            for(i=0;i<events.length;i++){
+              if (events[i][2]==1){
+                html_info+="<li class='todo completed'><div class='view'><input class='toggle' type='checkbox' checked='checked' onchange='show_events(null,null,"+events[i][0]+")'><label>"+events[i][1]+"</label><button class='destroy' onclick='show_events(null,"+events[i][0]+")'></button></div><input class='edit' value='"+events[i][1]+"' type='text'></li>"
+              }else{
+                html_info+="<li class='todo'><div class='view' ondblclick='display_edit(this)'><input class='toggle' type='checkbox' onchange='show_events(null,null,"+events[i][0]+")'><label>"+events[i][1]+"</label><button class='destroy' onclick='show_events(null,"+events[i][0]+")'></button></div><input class='edit' value='"+events[i][1]+"' onkeyup='update_event(this,"+events[i][0]+")' type='text' id='update_content"+events[i][0]+"' onblur='undisplay_edit(this)'></li>"
+              }
+            }
+            count=data.count
+            document.getElementById('items_left').innerText=count
+            events_list.innerHTML=html_info
+          }
+        }).catch(function (e){
+          console.error('有错没:'+e)
+        })
+      }
+
+      function add_new_event(e){
+        if(event.keyCode==13){
+          new_content=document.getElementById('new_event').value
+          var events_list=document.getElementById('events_list')
+          fetch('/submit',{
+        method: 'POST',
+        body: JSON.stringify({new_content:new_content}),
+        headers:{'Content-Type': 'application/json'}
+      }).then(function (res){
+        return res.json()
+      }).then(function (data){
+        if(data.status==-1){
+          location.href = '/login'
+        }else{
+          html_info=""
+          events=data.events
+          for(i=0;i<events.length;i++){
+              if (events[i][2]==1){
+                html_info+="<li class='todo completed'><div class='view'><input class='toggle' type='checkbox' checked='checked' onchange='show_events(null,null,"+events[i][0]+")'><label>"+events[i][1]+"</label><button class='destroy' onclick='delete_event("+events[i][0]+")'></button></div><input class='edit' value='"+events[i][1]+"' type='text'></li>"
+              }else{
+                html_info+="<li class='todo'><div class='view' ondblclick='display_edit(this)'><input class='toggle' type='checkbox' onchange='show_events(null,null,"+events[i][0]+")'><label>"+events[i][1]+"</label><button class='destroy' onclick='delete_event("+events[i][0]+")'></button></div><input class='edit' value='"+events[i][1]+"' onkeyup='update_event(this,"+events[i][0]+")' type='text' id='update_content"+events[i][0]+"' onblur='undisplay_edit(this)'></li>"
+              }
+          }
+          count=data.count
+          document.getElementById('items_left').innerText=count
+          events_list.innerHTML=html_info
+          document.getElementById('new_event').value=""
+        }
+      }).catch(function (e){
+        console.error('有错没:'+e)
+      })
+        }
+      }
+
+      function update_event(e,id){
+        if(event.keyCode==13){
+          update_content=document.getElementById('update_content'+id).value
+          var events_list=document.getElementById('events_list')
+          fetch('/submit',{
+        method: 'POST',
+        body: JSON.stringify({id:id,update_content:update_content}),
+        headers:{'Content-Type': 'application/json'}
+      }).then(function (res){
+        return res.json()
+      }).then(function (data){
+        if(data.status==-1){
+          location.href = '/login'
+        }else{
+          html_info=""
+          events=data.events
+          for(i=0;i<events.length;i++){
+              if (events[i][2]==1){
+                html_info+="<li class='todo completed'><div class='view'><input class='toggle' type='checkbox' checked='checked' onchange='show_events(null,null,"+events[i][0]+")'><label>"+events[i][1]+"</label><button class='destroy' onclick='delete_event("+events[i][0]+")'></button></div><input class='edit' value='"+events[i][1]+"' type='text'></li>"
+              }else{
+                html_info+="<li class='todo'><div class='view' ondblclick='display_edit(this)'><input class='toggle' type='checkbox' onchange='show_events(null,null,"+events[i][0]+")'><label>"+events[i][1]+"</label><button class='destroy' onclick='delete_event("+events[i][0]+")'></button></div><input class='edit' value='"+events[i][1]+"' onkeyup='update_event(this,"+events[i][0]+")' type='text' id='update_content"+events[i][0]+"' onblur='undisplay_edit(this)'></li>"
+              }
+            }
+          count=data.count
+          document.getElementById('items_left').innerText=count
+          events_list.innerHTML=html_info
+          document.getElementById('new_event').value=""
+        }
+      }).catch(function (e){
+        console.error('有错没:'+e)
+      })
+        }
+      }
+
+      function display_edit(e) {
+        console.log(e)
+        var li = e.parentElement
+        li.classList.add('editing')
+        var edit = li.querySelector('input.edit')
+        edit.focus()
+        edit.setSelectionRange(edit.value.length, edit.value.length)
+      }
+
+      function undisplay_edit(e) {
+        console.log(e)
+        var li = e.parentElement
+        li.classList.remove('editing')
+      }
+
+    </script>
+
+  </head>
+  <body class="has-background-light">
+    <center><div style="font-size:20px; margin: 20px" id="login_info">
+      {% if login_info is none %}
+        请先登录，<a href="/login">登录</a>
+      {% else %}
+        当前用户 , {{login_info}} <a href="/?clear_session"> 注销 </a>
+      {% endif %}
+    </div></center>
+    <section class="todoapp">
+      <header class="header">
+        <h1>任务列表</h1>
+        <input class="new-todo" autofocus=""  autocomplete="off" placeholder="接下来要做什么？" id="new_event" onkeyup="add_new_event(this)" >
+      </header>
+      <section class="main" v-cloak="">
+        <input class="toggle-all" type="checkbox">
+        <ul class="todo-list" id="events_list">
+
+        </ul>
+      </section>
+      <footer class="footer"><span class="todo-count"><strong id="items_left"></strong> items left</span>
+        <ul class="filters">
+          <li><button class="selected" type="button" onclick="show_events(null,null)">所有</button></li>
+          <li><button class="selected" type="button" onclick="show_events(0,null)">进行中</button></li>
+          <li><button class="selected" type="button" onclick="show_events(1,null)">已完成</button></li>
+        </ul>
+        <button class="clear-completed" onclick="show_events(null,'completed')">清除已完成</button>
+      </footer>
+    </section>
+    <footer class="info">
+    </footer>
+  <script type="text/javascript" src="main.js"></script></body>
+</html>
